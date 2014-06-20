@@ -15,7 +15,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -29,8 +30,8 @@ import pl.edu.agh.bd2.tutorial.dao.Post;
 
 public class Parser {
 
-    private static final Logger LOG = Logger.getLogger(Parser.class);
-    private static final String XML_FILE_PATH = "res/tolkien.xml";
+    private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
+    private static final String XML_FILE_PATH = "src/main/resources/tolkien.xml";
     private static final DateFormat THREAD_DATE_FORMAT = new SimpleDateFormat(
 	    "yyyy-MM-dd HH:mm:ss");
     private static final DateFormat USER_DATE_FORMAT = new SimpleDateFormat(

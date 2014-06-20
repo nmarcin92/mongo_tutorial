@@ -5,14 +5,15 @@ import java.text.ParseException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import pl.edu.agh.bd2.tutorial.parser.Parser;
 
 public class Main {
 
-    private static final Logger LOG = Logger.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
 	try {
@@ -30,6 +31,7 @@ public class Main {
 	    LOG.error("XML parsing failed", e);
 	    System.exit(1);
 	}
+
     }
 
 }
