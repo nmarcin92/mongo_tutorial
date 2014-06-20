@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +15,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -26,6 +29,7 @@ import pl.edu.agh.bd2.tutorial.dao.Post;
 
 public class Parser {
 
+    private static final Logger LOG = Logger.getLogger(Parser.class);
     private static final String XML_FILE_PATH = "res/tolkien.xml";
     private static final DateFormat THREAD_DATE_FORMAT = new SimpleDateFormat(
 	    "yyyy-MM-dd HH:mm:ss");
@@ -44,6 +48,8 @@ public class Parser {
 	    throws ParserConfigurationException, SAXException, IOException,
 	    ParseException {
 
+	LOG.info("XML parsing from file " + XML_FILE_PATH + " started");
+
 	Forum forum = Forum.getInstance();
 
 	File xmlFile = new File(XML_FILE_PATH);
@@ -56,8 +62,8 @@ public class Parser {
 	for (int i = 0; i < nList.getLength(); ++i) {
 	    Node node = nList.item(i);
 	    Element element = (Element) node;
-	    String threadCreationDate = element.getElementsByTagName("date")
-		    .item(0).getTextContent();
+	    Date threadCreationDate = THREAD_DATE_FORMAT.parse(element
+		    .getElementsByTagName("date").item(0).getTextContent());
 
 	    NodeList threadList = element.getElementsByTagName("rule");
 
@@ -67,45 +73,66 @@ public class Parser {
 	    String postContent = threadList.item(3).getTextContent();
 	    String postDetails = threadList.item(4).getTextContent();
 
-	    String userJoinDate = null;
+	    Date userJoinDate = null;
 	    Matcher m = USER_DATE_PATTERN.matcher(userData);
 	    if (m.find()) {
-		userJoinDate = m.group(1);
+		userJoinDate = USER_DATE_FORMAT.parse(m.group(1));
 	    }
 	    String userCity = null;
 	    m = USER_CITY_PATTERN.matcher(userData);
 	    if (m.find()) {
 		userCity = m.group(1);
 	    }
-	    String postCreationDate = null;
+	    Date postCreationDate = null;
 	    m = POST_DATE_PATTERN.matcher(postDetails);
 	    if (m.find()) {
-		postCreationDate = m.group(1);
+		String dateText = m.group(1);
+		if (dateText.startsWith("Dzisiaj")) {
+		    postCreationDate = getDateWithHours(true,
+			    dateText.substring(dateText.length() - 5));
+		} else if (dateText.startsWith("Wczoraj")) {
+		    postCreationDate = getDateWithHours(false,
+			    dateText.substring(dateText.length() - 5));
+		} else {
+		    postCreationDate = POST_DATE_FORMAT.parse(m.group(1));
+		}
 	    }
 
 	    ForumUser user = new ForumUser();
 	    user.setLogin(userLogin);
-	    user.setJoinDate(userJoinDate != null ? USER_DATE_FORMAT
-		    .parse(userJoinDate) : null);
+	    user.setJoinDate(userJoinDate);
 	    user.setCity(userCity);
 
 	    ForumThread thread = new ForumThread();
 	    thread.setThreadTitle(threadTitle);
 	    thread.setUser(user);
-	    thread.setCreationDate(threadCreationDate != null ? THREAD_DATE_FORMAT
-		    .parse(threadCreationDate) : null);
+	    thread.setCreationDate(threadCreationDate);
 
 	    Post post = new Post();
 	    post.setContent(postContent);
 	    post.setThread(thread);
 	    post.setUser(user);
-	    post.setCreationDate(postCreationDate != null ? POST_DATE_FORMAT
-		    .parse(postCreationDate) : null);
+	    post.setCreationDate(postCreationDate);
 
 	    forum.addPost(post, thread, user);
 	}
 
+	LOG.info("XML parsing from file " + XML_FILE_PATH + " finished");
+	LOG.info("Imported users: " + forum.getForumUsers().size()
+		+ ", threads: " + forum.getForumThreads().size() + ", posts: "
+		+ forum.getPosts().size());
+
 	return forum;
     }
 
+    private static Date getDateWithHours(boolean today, String hour) {
+	Calendar cal = Calendar.getInstance();
+	cal.add(Calendar.HOUR, Integer.parseInt(hour.split(":")[0]));
+	cal.add(Calendar.MINUTE, Integer.parseInt(hour.split(":")[1]));
+	if (!today) {
+	    cal.add(Calendar.DATE, -1);
+	}
+
+	return cal.getTime();
+    }
 }
