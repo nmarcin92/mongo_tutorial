@@ -32,21 +32,14 @@ public class Parser {
 
     private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
     private static final String XML_FILE_PATH = "src/main/resources/tolkien.xml";
-    private static final DateFormat THREAD_DATE_FORMAT = new SimpleDateFormat(
-	    "yyyy-MM-dd HH:mm:ss");
-    private static final DateFormat USER_DATE_FORMAT = new SimpleDateFormat(
-	    "dd MMM yyyy", Locale.forLanguageTag("pl"));
-    private static final DateFormat POST_DATE_FORMAT = new SimpleDateFormat(
-	    "dd-MM-yyyy HH:mm");
-    private static final Pattern USER_DATE_PATTERN = Pattern
-	    .compile("Do³¹czy³\\(a\\): (.*)");
-    private static final Pattern USER_CITY_PATTERN = Pattern
-	    .compile("Sk¹d: (.*)");
-    private static final Pattern POST_DATE_PATTERN = Pattern
-	    .compile("Wys³any: (.*)");
+    private static final DateFormat THREAD_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat USER_DATE_FORMAT = new SimpleDateFormat("dd MMM yyyy", Locale.forLanguageTag("pl"));
+    private static final DateFormat POST_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+    private static final Pattern USER_DATE_PATTERN = Pattern.compile("Do³¹czy³\\(a\\): (.*)");
+    private static final Pattern USER_CITY_PATTERN = Pattern.compile("Sk¹d: (.*)");
+    private static final Pattern POST_DATE_PATTERN = Pattern.compile("Wys³any: (.*)");
 
-    public static Forum parseAndInitialize()
-	    throws ParserConfigurationException, SAXException, IOException,
+    public static Forum parseAndInitialize() throws ParserConfigurationException, SAXException, IOException,
 	    ParseException {
 
 	LOG.info("XML parsing from file " + XML_FILE_PATH + " started");
@@ -63,14 +56,14 @@ public class Parser {
 	for (int i = 0; i < nList.getLength(); ++i) {
 	    Node node = nList.item(i);
 	    Element element = (Element) node;
-	    Date threadCreationDate = THREAD_DATE_FORMAT.parse(element
-		    .getElementsByTagName("date").item(0).getTextContent());
+	    Date threadCreationDate = THREAD_DATE_FORMAT.parse(element.getElementsByTagName("date").item(0)
+		    .getTextContent());
 
 	    NodeList threadList = element.getElementsByTagName("rule");
 
-	    String threadTitle = threadList.item(0).getTextContent();
+	    String threadTitle = threadList.item(0).getTextContent().split(":")[1].substring(1).trim();
 	    String userData = threadList.item(1).getTextContent();
-	    String userLogin = threadList.item(2).getTextContent();
+	    String userLogin = threadList.item(2).getTextContent().trim();
 	    String postContent = threadList.item(3).getTextContent();
 	    String postDetails = threadList.item(4).getTextContent();
 
@@ -89,11 +82,9 @@ public class Parser {
 	    if (m.find()) {
 		String dateText = m.group(1);
 		if (dateText.startsWith("Dzisiaj")) {
-		    postCreationDate = getDateWithHours(true,
-			    dateText.substring(dateText.length() - 5));
+		    postCreationDate = getDateWithHours(true, dateText.substring(dateText.length() - 5));
 		} else if (dateText.startsWith("Wczoraj")) {
-		    postCreationDate = getDateWithHours(false,
-			    dateText.substring(dateText.length() - 5));
+		    postCreationDate = getDateWithHours(false, dateText.substring(dateText.length() - 5));
 		} else {
 		    postCreationDate = POST_DATE_FORMAT.parse(m.group(1));
 		}
@@ -119,9 +110,8 @@ public class Parser {
 	}
 
 	LOG.info("XML parsing from file " + XML_FILE_PATH + " finished");
-	LOG.info("Imported users: " + forum.getForumUsers().size()
-		+ ", threads: " + forum.getForumThreads().size() + ", posts: "
-		+ forum.getPosts().size());
+	LOG.info("Imported users: " + forum.getForumUsers().size() + ", threads: " + forum.getForumThreads().size()
+		+ ", posts: " + forum.getPosts().size());
 
 	return forum;
     }
