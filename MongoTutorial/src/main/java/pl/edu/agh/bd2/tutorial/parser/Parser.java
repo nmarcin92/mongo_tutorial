@@ -32,7 +32,8 @@ public class Parser {
 
     private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
     private static final String XML_FILE_PATH = "src/main/resources/tolkien.xml";
-    private static final DateFormat THREAD_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    // private static final DateFormat THREAD_DATE_FORMAT = new
+    // SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat USER_DATE_FORMAT = new SimpleDateFormat("dd MMM yyyy", Locale.forLanguageTag("pl"));
     private static final DateFormat POST_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm");
     private static final Pattern USER_DATE_PATTERN = Pattern.compile("Do³¹czy³\\(a\\): (.*)");
@@ -56,8 +57,9 @@ public class Parser {
 	for (int i = 0; i < nList.getLength(); ++i) {
 	    Node node = nList.item(i);
 	    Element element = (Element) node;
-	    Date threadCreationDate = THREAD_DATE_FORMAT.parse(element.getElementsByTagName("date").item(0)
-		    .getTextContent());
+	    // Date threadCreationDate =
+	    // THREAD_DATE_FORMAT.parse(element.getElementsByTagName("date").item(0)
+	    // .getTextContent());
 
 	    NodeList threadList = element.getElementsByTagName("rule");
 
@@ -98,7 +100,7 @@ public class Parser {
 	    ForumThread thread = new ForumThread();
 	    thread.setThreadTitle(threadTitle);
 	    thread.setUser(user);
-	    thread.setCreationDate(threadCreationDate);
+	    thread.setCreationDate(postCreationDate);
 
 	    Post post = new Post();
 	    post.setContent(postContent);

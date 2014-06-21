@@ -1,5 +1,6 @@
 package pl.edu.agh.bd2.tutorial;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +34,12 @@ public class Forum {
 	    usersMap.put(user.getLogin(), user);
 	}
 	if (threadsMap.containsKey(thread.getThreadTitle())) {
+	    Date newDate = thread.getCreationDate();
 	    thread = threadsMap.get(thread.getThreadTitle());
+	    if (thread.getCreationDate().after(newDate)) {
+		thread.setCreationDate(newDate);
+		thread.setUser(user);
+	    }
 	    post.setThread(thread);
 	} else {
 	    threadsMap.put(thread.getThreadTitle(), thread);

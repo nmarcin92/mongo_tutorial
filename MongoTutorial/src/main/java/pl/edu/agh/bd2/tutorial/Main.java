@@ -7,13 +7,17 @@ import java.util.regex.Pattern;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.xml.sax.SAXException;
 
+import pl.edu.agh.bd2.tutorial.dao.ForumThread;
 import pl.edu.agh.bd2.tutorial.mongo.SpringMongoConfig;
 import pl.edu.agh.bd2.tutorial.parser.Parser;
 
@@ -34,7 +38,6 @@ public class Main {
 	// initializeDatabase();
 
 	new PerformanceTest() {
-
 	    @Override
 	    public String testOperations() {
 		return countThreadsIn2013();
@@ -90,6 +93,8 @@ public class Main {
 	    };
 	}.performTest("35th most popular word in posts");
 
+	System.out.println("Summary testing time: " + PerformanceTest.getSummaryTestingTime() + "ms");
+
 	// } catch (ParserConfigurationException e) {
 	// LOG.error("XML parser configuration error", e);
 	// } catch (SAXException e) {
@@ -121,8 +126,16 @@ public class Main {
 
     }
 
+    @SuppressWarnings("deprecation")
     private static String countThreadsIn2013() {
-	return null;
+	Query query = new Query();
+	Date startDate = new DateTime("2013-01-01T00:00:00Z").toDate();
+	Date endDate = new DateTime("2013-12-30T23:59:59Z").toDate();
+	query.addCriteria(new Criteria().andOperator(
+	//
+		Criteria.where("creationDate").gte(startDate), Criteria.where("creationDate").lte(endDate)));
+
+	return String.valueOf(mongoOperations.count(query, ForumThread.class));
     }
 
     private static String getMostPopularThreadInMay() {
@@ -134,6 +147,13 @@ public class Main {
     }
 
     private static String getUserWithMostThreads() {
+	// TypedAggregation<Post> agg = newAggregation(Post.class, group("user",
+	// "thread").count().as("threadNr"),
+	// sort(Direction.DESC, "threadNr"));
+	// AggregationResults<Post> res = mongoOperations.aggregate(agg,
+	// Post.class);
+	//
+	// System.out.println(res.getMappedResults());
 	return null;
     }
 
@@ -142,7 +162,11 @@ public class Main {
     }
 
     private static String countPostsWithUsersFromKCity() {
-	return null;
+	BasicDBObject query = new BasicDBObject();
+	Pattern regex = Pattern.compile("K.*");
+	query.put("user.city", regex);
+
+	return String.valueOf(mongoOperations.getCollection("posts").count(query));
     }
 
     private static String get35thMostPopularUsedWord() {
@@ -159,6 +183,8 @@ public class Main {
 
     private static abstract class PerformanceTest {
 
+	private static long summaryTestingTime = 0;
+
 	public void performTest(String testInfo) {
 	    long startTime = new Date().getTime();
 	    String result = testOperations();
@@ -168,6 +194,12 @@ public class Main {
 	    System.out.println(testInfo + ": " + result);
 	    System.out.println("time elapsed: " + elapsedTime + "ms");
 	    System.out.println("------------------------------------");
+
+	    summaryTestingTime += elapsedTime;
+	}
+
+	public static long getSummaryTestingTime() {
+	    return summaryTestingTime;
 	}
 
 	public abstract String testOperations();
