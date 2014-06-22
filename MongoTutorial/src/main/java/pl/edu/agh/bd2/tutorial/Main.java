@@ -7,17 +7,25 @@ import java.util.regex.Pattern;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.jetty.jndi.local.localContextRoot;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.xml.sax.SAXException;
 
 import pl.edu.agh.bd2.tutorial.dao.ForumThread;
+import pl.edu.agh.bd2.tutorial.dao.ForumUser;
+import pl.edu.agh.bd2.tutorial.dao.Post;
 import pl.edu.agh.bd2.tutorial.mongo.SpringMongoConfig;
 import pl.edu.agh.bd2.tutorial.parser.Parser;
 
@@ -139,14 +147,40 @@ public class Main {
     }
 
     private static String getMostPopularThreadInMay() {
-	return null;
+
+//    	Query query = new Query();
+//    	Date startDate = new DateTime("2013-05-01T00:00:00Z").toDate();
+//    	Date endDate = new DateTime("2013-05-31T23:59:59Z").toDate();
+//    	query.addCriteria(new Criteria().andOperator(
+//    	//
+//    		Criteria.where("creationDate").gte(startDate), Criteria.where("creationDate").lte(endDate)));
+//
+//    	return String.valueOf(mongoOperations.count(query, ForumThread.class));
+    	return null;
     }
 
     private static String countAveragePostLength() {
-	return null;
+    	/*
+    	 * Unfortunately the aggregation framework doesn't support a "len" operator 
+    	 * to automatically convert strings to their length while you do a query
+    	 */
+//    	
+//    	AggregationOperation project = Aggregation.project("login");
+//    	AggregationOperation sort = Aggregation.sort(Direction.DESC, "login");//("user").sum("amount").as("amount_sum").count().as("tran_count");
+//    	Aggregation aggregation = Aggregation.newAggregation(project, sort);
+//    	 AggregationResults<Post> result = mongoOperations.aggregate(aggregation, "posts", Post.class);
+//    	 
+//    	 return String.valueOf(result.getMappedResults().size());
+    	return null;
     }
 
     private static String getUserWithMostThreads() {
+
+    	AggregationOperation group = Aggregation.group("user").sum("amount").as("am").count().as("count");
+    	AggregationOperation sort = Aggregation.sort(Direction.DESC, "count");
+    	AggregationOperation limit = Aggregation.limit(1);
+    	Aggregation aggregation = Aggregation.newAggregation(group, sort, limit);
+		AggregationResults<ForumUser> result = mongoOperations.aggregate(aggregation, "posts", ForumUser.class);
 	// TypedAggregation<Post> agg = newAggregation(Post.class, group("user",
 	// "thread").count().as("threadNr"),
 	// sort(Direction.DESC, "threadNr"));
@@ -154,7 +188,7 @@ public class Main {
 	// Post.class);
 	//
 	// System.out.println(res.getMappedResults());
-	return null;
+	return result.getMappedResults().get(0).getLogin();
     }
 
     private static String getMostCommentingUser() {
