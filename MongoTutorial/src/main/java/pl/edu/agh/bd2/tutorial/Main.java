@@ -198,7 +198,7 @@ public class Main {
 
     private static String countPostsWithUsersFromKCity() {
 	BasicDBObject query = new BasicDBObject();
-	Pattern regex = Pattern.compile("K.*");
+	Pattern regex = Pattern.compile("^K.*");
 	query.put("user.city", regex);
 
 	return String.valueOf(mongoOperations.getCollection("posts").count(query));
