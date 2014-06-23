@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 
 import pl.edu.agh.bd2.tutorial.dao.ForumThread;
 import pl.edu.agh.bd2.tutorial.dao.ForumUser;
+import pl.edu.agh.bd2.tutorial.dao.Post;
 import pl.edu.agh.bd2.tutorial.mongo.SpringMongoConfig;
 import pl.edu.agh.bd2.tutorial.parser.Parser;
 
@@ -164,21 +165,29 @@ public class Main {
     }
 
     private static String countAveragePostLength() {
-	/*
-	 * Unfortunately the aggregation framework doesn't support a "len"
-	 * operator to automatically convert strings to their length while you
-	 * do a query
-	 */
-	//
-	// AggregationOperation project = Aggregation.project("login");
-	// AggregationOperation sort = Aggregation.sort(Direction.DESC,
-	// "login");//("user").sum("amount").as("amount_sum").count().as("tran_count");
-	// Aggregation aggregation = Aggregation.newAggregation(project, sort);
-	// AggregationResults<Post> result =
-	// mongoOperations.aggregate(aggregation, "posts", Post.class);
-	//
-	// return String.valueOf(result.getMappedResults().size());
-	return null;
+
+    	/*
+    	 * Unfortunately the aggregation framework doesn't support a "len"
+    	 * operator to automatically convert strings to their length while you
+    	 * do a query
+    	 */
+    	AggregationOperation project = Aggregation.project("content");
+    	Aggregation aggregation = Aggregation.newAggregation(project);
+    	AggregationResults<Post> result = mongoOperations.aggregate(aggregation, "posts", Post.class);
+    	//System.out.println(result.getMappedResults().get(100).getContent());
+
+    	Query query = new Query();    	
+    	long len = mongoOperations.count(query, Post.class);
+    	
+    	double avg=0;
+    	for (Post p :  result.getMappedResults()){
+    		
+    		avg+=p.getContent().length();
+    	}
+    	
+    	avg /= len;
+    	return Double.toString(avg);
+    	
     }
 
     private static String getUserWithMostThreads() {
