@@ -30,7 +30,10 @@ import pl.edu.agh.bd2.tutorial.parser.Parser;
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
 
 public class Main {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
@@ -39,80 +42,80 @@ public class Main {
     private static Forum forum;
 
     public static void main(String[] args) {
-	// try {
-	@SuppressWarnings("resource")
-	ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringMongoConfig.class);
-	mongoOperations = (MongoOperations) ctx.getBean("mongoTemplate");
+	try {
+	    @SuppressWarnings("resource")
+	    ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringMongoConfig.class);
+	    mongoOperations = (MongoOperations) ctx.getBean("mongoTemplate");
 
-	// initializeDatabase();
+	    initializeDatabase();
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countThreadsIn2013();
-	    }
-	}.performTest("Threads created in year 2013");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countThreadsIn2013();
+		}
+	    }.performTest("Threads created in year 2013");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return getMostPopularThreadInMay();
-	    };
-	}.performTest("Most popular thread in may title");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return getMostPopularThreadInMay();
+		};
+	    }.performTest("Most popular thread in may title");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countAveragePostLength();
-	    };
-	}.performTest("Average post length");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countAveragePostLength();
+		};
+	    }.performTest("Average post length");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return getUserWithMostThreads();
-	    };
-	}.performTest("User that posted in the biggest number of threads login");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return getUserWithMostThreads();
+		};
+	    }.performTest("User that posted in the biggest number of threads login");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return getMostCommentingUser();
-	    };
-	}.performTest("User that posted in the biggest number of unique threads login");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return getMostCommentingUser();
+		};
+	    }.performTest("User that posted in the biggest number of unique threads login");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countPostsWithFrodoWord();
-	    };
-	}.performTest("Number of posts containing word 'Frodo'");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countPostsWithFrodoWord();
+		};
+	    }.performTest("Number of posts containing word 'Frodo'");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countPostsWithUsersFromKCity();
-	    };
-	}.performTest("Number of posts written by users from city starting with 'K' letter");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countPostsWithUsersFromKCity();
+		};
+	    }.performTest("Number of posts written by users from city starting with 'K' letter");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return get35thMostPopularUsedWord();
-	    };
-	}.performTest("35th most popular word in posts");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return get35thMostPopularUsedWord();
+		};
+	    }.performTest("35th most popular word in posts");
 
-	System.out.println("Summary testing time: " + PerformanceTest.getSummaryTestingTime() + "ms");
+	    System.out.println("Summary testing time: " + PerformanceTest.getSummaryTestingTime() + "ms");
 
-	// } catch (ParserConfigurationException e) {
-	// LOG.error("XML parser configuration error", e);
-	// } catch (SAXException e) {
-	// LOG.error("XML parsing failed", e);
-	// } catch (IOException e) {
-	// LOG.error("IO error", e);
-	// } catch (ParseException e) {
-	// LOG.error("XML parsing failed", e);
-	// }
+	} catch (ParserConfigurationException e) {
+	    LOG.error("XML parser configuration error", e);
+	} catch (SAXException e) {
+	    LOG.error("XML parsing failed", e);
+	} catch (IOException e) {
+	    LOG.error("IO error", e);
+	} catch (ParseException e) {
+	    LOG.error("XML parsing failed", e);
+	}
 
     }
 
@@ -166,28 +169,28 @@ public class Main {
 
     private static String countAveragePostLength() {
 
-    	/*
-    	 * Unfortunately the aggregation framework doesn't support a "len"
-    	 * operator to automatically convert strings to their length while you
-    	 * do a query
-    	 */
-    	AggregationOperation project = Aggregation.project("content");
-    	Aggregation aggregation = Aggregation.newAggregation(project);
-    	AggregationResults<Post> result = mongoOperations.aggregate(aggregation, "posts", Post.class);
-    	//System.out.println(result.getMappedResults().get(100).getContent());
+	/*
+	 * Unfortunately the aggregation framework doesn't support a "len"
+	 * operator to automatically convert strings to their length while you
+	 * do a query
+	 */
+	AggregationOperation project = Aggregation.project("content");
+	Aggregation aggregation = Aggregation.newAggregation(project);
+	AggregationResults<Post> result = mongoOperations.aggregate(aggregation, "posts", Post.class);
+	// System.out.println(result.getMappedResults().get(100).getContent());
 
-    	Query query = new Query();    	
-    	long len = mongoOperations.count(query, Post.class);
-    	
-    	double avg=0;
-    	for (Post p :  result.getMappedResults()){
-    		
-    		avg+=p.getContent().length();
-    	}
-    	
-    	avg /= len;
-    	return Double.toString(avg);
-    	
+	Query query = new Query();
+	long len = mongoOperations.count(query, Post.class);
+
+	double avg = 0;
+	for (Post p : result.getMappedResults()) {
+
+	    avg += p.getContent().length();
+	}
+
+	avg /= len;
+	return Double.toString(avg);
+
     }
 
     private static String getUserWithMostThreads() {
@@ -214,6 +217,34 @@ public class Main {
     }
 
     private static String get35thMostPopularUsedWord() {
+	String map = "function Map() {" //
+		+ "var content = this.content; " //
+		+ "if (content) {" //
+		+ "content = content.toLowerCase().split(\" \"); "//
+		+ "for (var i=content.length-1; i>=0; i--) {" //
+		+ "if (content[i]) {" //
+		+ "emit(content[i],1);}}}}";
+
+	String reduce = "function Reduce(key, values) {" //
+		+ "var count = 0; " //
+		+ "values.forEach(function(v) {" //
+		+ "count += v; });" //
+		+ "return count;}";
+	DBCollection postsCollection = mongoOperations.getCollection("posts");
+	mongoOperations.dropCollection("map_reduce_result");
+	MapReduceCommand cmd = new MapReduceCommand(postsCollection, map, reduce, "map_reduce_result",
+		MapReduceCommand.OutputType.REPLACE, null);
+	MapReduceOutput out = postsCollection.mapReduce(cmd);
+
+	int i = 1;
+	for (DBObject o : mongoOperations.getCollection("map_reduce_result").find()
+		.sort(new BasicDBObject("value", -1))) {
+	    ++i;
+	    if (i == 35) {
+		return o.get("_id").toString();
+	    }
+	}
+
 	return null;
     }
 
