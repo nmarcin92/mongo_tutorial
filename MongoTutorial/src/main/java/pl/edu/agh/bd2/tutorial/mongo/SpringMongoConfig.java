@@ -18,10 +18,9 @@ public class SpringMongoConfig {
 
 	MongoClientOptions options = MongoClientOptions.builder().connectionsPerHost(10)
 		.writeConcern(WriteConcern.NONE).build();
-	// return new SimpleMongoDbFactory(new MongoClient("localhost",
-	// options), "forum-db");
+	return new SimpleMongoDbFactory(new MongoClient("localhost", options), "forum-db");
 
-	return new SimpleMongoDbFactory(new MongoClient(), "forum-db");
+	// return new SimpleMongoDbFactory(new MongoClient(), "forum-db");
     }
 
     public @Bean

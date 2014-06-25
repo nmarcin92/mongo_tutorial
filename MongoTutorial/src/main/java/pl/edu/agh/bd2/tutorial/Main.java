@@ -38,7 +38,10 @@ import pl.edu.agh.bd2.tutorial.parser.Parser;
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
 
 public class Main {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
@@ -81,13 +84,6 @@ public class Main {
 		    return getUserWithMostThreads();
 		};
 	    }.performTest("User that posted in the biggest number of threads login");
-
-	    new PerformanceTest() {
-		@Override
-		public String testOperations() {
-		    return getMostCommentingUser();
-		};
-	    }.performTest("User that posted in the biggest number of unique threads login");
 
 	    new PerformanceTest() {
 		@Override
@@ -142,6 +138,11 @@ public class Main {
 	mongoOperations.insertAll(forum.getForumThreads());
 	mongoOperations.insertAll(forum.getPosts());
 	LOG.info("Loading data into database finished. Time: " + (new Date().getTime() - startTime.getTime()) + "ms");
+
+	mongoOperations.getCollection("users").ensureIndex("login");
+	mongoOperations.getCollection("threads").ensureIndex(
+		BasicDBObjectBuilder.start("threadTitle", 1).append("creationDate", 1).get());
+	mongoOperations.getCollection("posts").ensureIndex("creationDate");
 
     }
 
@@ -222,7 +223,6 @@ public class Main {
 	    AggregationOperation project = Aggregation.project("content");
 	    Aggregation aggregation = Aggregation.newAggregation(project);
 	    AggregationResults<Post> result = mongoOperations.aggregate(aggregation, "posts", Post.class);
-	    // System.out.println(result.getMappedResults().get(100).getContent());
 
 	    Query query = new Query();
 	    long len = mongoOperations.count(query, Post.class);
@@ -283,10 +283,6 @@ public class Main {
 	}
     }
 
-    private static String getMostCommentingUser() {
-	return null;
-    }
-
     private static String countPostsWithUsersFromKCity() {
 	if (PerformanceTest.mongoMode) {
 	    BasicDBObject query = new BasicDBObject();
@@ -310,36 +306,33 @@ public class Main {
     private static String get35thMostPopularUsedWord() {
 
 	if (PerformanceTest.mongoMode) {
-	    // String map = "function Map() {" //
-	    // + "var content = this.content; " //
-	    // + "if (content) {" //
-	    // + "content = content.toLowerCase().split(\" \"); "//
-	    // + "for (var i=content.length-1; i>=0; i--) {" //
-	    // + "if (content[i]) {" //
-	    // + "emit(content[i],1);}}}}";
-	    //
-	    // String reduce = "function Reduce(key, values) {" //
-	    // + "var count = 0; " //
-	    // + "values.forEach(function(v) {" //
-	    // + "count += v; });" //
-	    // + "return count;}";
-	    // DBCollection postsCollection =
-	    // mongoOperations.getCollection("posts");
-	    // mongoOperations.dropCollection("map_reduce_result");
-	    // MapReduceCommand cmd = new MapReduceCommand(postsCollection, map,
-	    // reduce, "map_reduce_result",
-	    // MapReduceCommand.OutputType.REPLACE, null);
-	    // MapReduceOutput out = postsCollection.mapReduce(cmd);
-	    //
-	    // int i = 1;
-	    // for (DBObject o :
-	    // mongoOperations.getCollection("map_reduce_result").find()
-	    // .sort(new BasicDBObject("value", -1))) {
-	    // ++i;
-	    // if (i == 35) {
-	    // return o.get("_id").toString();
-	    // }
-	    // }
+	    String map = "function Map() {" //
+		    + "var content = this.content; " //
+		    + "if (content) {" //
+		    + "content = content.toLowerCase().split(\" \"); "//
+		    + "for (var i=content.length-1; i>=0; i--) {" //
+		    + "if (content[i]) {" //
+		    + "emit(content[i],1);}}}}";
+
+	    String reduce = "function Reduce(key, values) {" //
+		    + "var count = 0; " //
+		    + "values.forEach(function(v) {" //
+		    + "count += v; });" //
+		    + "return count;}";
+	    DBCollection postsCollection = mongoOperations.getCollection("posts");
+	    mongoOperations.dropCollection("map_reduce_result");
+	    MapReduceCommand cmd = new MapReduceCommand(postsCollection, map, reduce, "map_reduce_result",
+		    MapReduceCommand.OutputType.REPLACE, null);
+	    MapReduceOutput out = postsCollection.mapReduce(cmd);
+
+	    int i = 1;
+	    for (DBObject o : mongoOperations.getCollection("map_reduce_result").find()
+		    .sort(new BasicDBObject("value", -1))) {
+		++i;
+		if (i == 35) {
+		    return o.get("_id").toString();
+		}
+	    }
 	    return null;
 	} else {
 	    List<Post> posts = mongoOperations.findAll(Post.class);
