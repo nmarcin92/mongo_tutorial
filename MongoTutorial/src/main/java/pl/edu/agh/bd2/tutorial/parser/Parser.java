@@ -44,7 +44,7 @@ public class Parser {
 	    ParseException {
 
 	LOG.info("XML parsing from file " + XML_FILE_PATH + " started");
-
+	long startTime = new Date().getTime();
 	Forum forum = Forum.getInstance();
 
 	File xmlFile = new File(XML_FILE_PATH);
@@ -57,9 +57,6 @@ public class Parser {
 	for (int i = 0; i < nList.getLength(); ++i) {
 	    Node node = nList.item(i);
 	    Element element = (Element) node;
-	    // Date threadCreationDate =
-	    // THREAD_DATE_FORMAT.parse(element.getElementsByTagName("date").item(0)
-	    // .getTextContent());
 
 	    NodeList threadList = element.getElementsByTagName("rule");
 
@@ -111,7 +108,7 @@ public class Parser {
 	    forum.addPost(post, thread, user);
 	}
 
-	LOG.info("XML parsing from file " + XML_FILE_PATH + " finished");
+	LOG.info("XML parsing from file " + XML_FILE_PATH + " finished in " + (new Date().getTime() - startTime) + "ms");
 	LOG.info("Imported users: " + forum.getForumUsers().size() + ", threads: " + forum.getForumThreads().size()
 		+ ", posts: " + forum.getPosts().size());
 

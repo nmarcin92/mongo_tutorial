@@ -2,12 +2,14 @@ package pl.edu.agh.bd2.tutorial;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
@@ -36,10 +38,7 @@ import pl.edu.agh.bd2.tutorial.parser.Parser;
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.MapReduceCommand;
-import com.mongodb.MapReduceOutput;
 
 public class Main {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
@@ -48,82 +47,82 @@ public class Main {
     private static Forum forum;
 
     public static void main(String[] args) {
-	// try {
-	@SuppressWarnings("resource")
-	ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringMongoConfig.class);
-	mongoOperations = (MongoOperations) ctx.getBean("mongoTemplate");
+	try {
+	    @SuppressWarnings("resource")
+	    ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringMongoConfig.class);
+	    mongoOperations = (MongoOperations) ctx.getBean("mongoTemplate");
 
-	// initializeDatabase();
+	    initializeDatabase();
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countThreadsIn2013();
-	    }
-	}.performTest("Threads created in year 2013");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countThreadsIn2013();
+		}
+	    }.performTest("Threads created in year 2013");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return getMostPopularThreadInMay();
-	    };
-	}.performTest("Most popular thread in may title");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return getMostPopularThreadInMay();
+		};
+	    }.performTest("Most popular thread in may title");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countAveragePostLength();
-	    };
-	}.performTest("Average post length");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countAveragePostLength();
+		};
+	    }.performTest("Average post length");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return getUserWithMostThreads();
-	    };
-	}.performTest("User that posted in the biggest number of threads login");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return getUserWithMostThreads();
+		};
+	    }.performTest("User that posted in the biggest number of threads login");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return getMostCommentingUser();
-	    };
-	}.performTest("User that posted in the biggest number of unique threads login");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return getMostCommentingUser();
+		};
+	    }.performTest("User that posted in the biggest number of unique threads login");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countPostsWithFrodoWord();
-	    };
-	}.performTest("Number of posts containing word 'Frodo'");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countPostsWithFrodoWord();
+		};
+	    }.performTest("Number of posts containing word 'Frodo'");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return countPostsWithUsersFromKCity();
-	    };
-	}.performTest("Number of posts written by users from city starting with 'K' letter");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return countPostsWithUsersFromKCity();
+		};
+	    }.performTest("Number of posts written by users from city starting with 'K' letter");
 
-	new PerformanceTest() {
-	    @Override
-	    public String testOperations() {
-		return get35thMostPopularUsedWord();
-	    };
-	}.performTest("35th most popular word in posts");
+	    new PerformanceTest() {
+		@Override
+		public String testOperations() {
+		    return get35thMostPopularUsedWord();
+		};
+	    }.performTest("35th most popular word in posts");
 
-	System.out.println("Summary testing time: ");
-	System.out.println("standard: " + PerformanceTest.getSummaryTestingTime(false) + "ms");
-	System.out.println("mongo: " + PerformanceTest.getSummaryTestingTime(true) + "ms");
+	    System.out.println("Summary testing time: ");
+	    System.out.println("standard: " + PerformanceTest.getSummaryTestingTime(false) + "ms");
+	    System.out.println("mongo: " + PerformanceTest.getSummaryTestingTime(true) + "ms");
 
-	// } catch (ParserConfigurationException e) {
-	// LOG.error("XML parser configuration error", e);
-	// } catch (SAXException e) {
-	// LOG.error("XML parsing failed", e);
-	// } catch (IOException e) {
-	// LOG.error("IO error", e);
-	// } catch (ParseException e) {
-	// LOG.error("XML parsing failed", e);
-	// }
+	} catch (ParserConfigurationException e) {
+	    LOG.error("XML parser configuration error", e);
+	} catch (SAXException e) {
+	    LOG.error("XML parsing failed", e);
+	} catch (IOException e) {
+	    LOG.error("IO error", e);
+	} catch (ParseException e) {
+	    LOG.error("XML parsing failed", e);
+	}
 
     }
 
@@ -168,8 +167,9 @@ public class Main {
 	    return String.valueOf(counter);
 	}
     }
-    
-    // Czasami wychodz¹ inne wyniki - prawdopodobnie kilka tematow ma tê sam¹ liczbê postów
+
+    // Czasami wychodz¹ inne wyniki - prawdopodobnie kilka tematow ma tê sam¹
+    // liczbê postów
     // i zale¿y jak siê posortuje
     private static String getMostPopularThreadInMay() {
 	Date startDate = new DateTime("2013-05-01T00:00:00Z").toDate();
@@ -308,35 +308,67 @@ public class Main {
     }
 
     private static String get35thMostPopularUsedWord() {
-	String map = "function Map() {" //
-		+ "var content = this.content; " //
-		+ "if (content) {" //
-		+ "content = content.toLowerCase().split(\" \"); "//
-		+ "for (var i=content.length-1; i>=0; i--) {" //
-		+ "if (content[i]) {" //
-		+ "emit(content[i],1);}}}}";
 
-	String reduce = "function Reduce(key, values) {" //
-		+ "var count = 0; " //
-		+ "values.forEach(function(v) {" //
-		+ "count += v; });" //
-		+ "return count;}";
-	DBCollection postsCollection = mongoOperations.getCollection("posts");
-	mongoOperations.dropCollection("map_reduce_result");
-	MapReduceCommand cmd = new MapReduceCommand(postsCollection, map, reduce, "map_reduce_result",
-		MapReduceCommand.OutputType.REPLACE, null);
-	MapReduceOutput out = postsCollection.mapReduce(cmd);
+	if (PerformanceTest.mongoMode) {
+	    // String map = "function Map() {" //
+	    // + "var content = this.content; " //
+	    // + "if (content) {" //
+	    // + "content = content.toLowerCase().split(\" \"); "//
+	    // + "for (var i=content.length-1; i>=0; i--) {" //
+	    // + "if (content[i]) {" //
+	    // + "emit(content[i],1);}}}}";
+	    //
+	    // String reduce = "function Reduce(key, values) {" //
+	    // + "var count = 0; " //
+	    // + "values.forEach(function(v) {" //
+	    // + "count += v; });" //
+	    // + "return count;}";
+	    // DBCollection postsCollection =
+	    // mongoOperations.getCollection("posts");
+	    // mongoOperations.dropCollection("map_reduce_result");
+	    // MapReduceCommand cmd = new MapReduceCommand(postsCollection, map,
+	    // reduce, "map_reduce_result",
+	    // MapReduceCommand.OutputType.REPLACE, null);
+	    // MapReduceOutput out = postsCollection.mapReduce(cmd);
+	    //
+	    // int i = 1;
+	    // for (DBObject o :
+	    // mongoOperations.getCollection("map_reduce_result").find()
+	    // .sort(new BasicDBObject("value", -1))) {
+	    // ++i;
+	    // if (i == 35) {
+	    // return o.get("_id").toString();
+	    // }
+	    // }
+	    return null;
+	} else {
+	    List<Post> posts = mongoOperations.findAll(Post.class);
+	    Map<String, Integer> wordsMap = new HashMap<>();
+	    ValueComparator vc = new ValueComparator(wordsMap);
+	    Map<String, Integer> sortedWordsMap = new TreeMap<>(vc);
 
-	int i = 1;
-	for (DBObject o : mongoOperations.getCollection("map_reduce_result").find()
-		.sort(new BasicDBObject("value", -1))) {
-	    ++i;
-	    if (i == 35) {
-		return o.get("_id").toString();
+	    for (Post p : posts) {
+		for (String word : p.getContent().toLowerCase().split(" ")) {
+		    Integer count = wordsMap.get(word);
+		    if (count == null) {
+			wordsMap.put(word, 1);
+		    } else {
+			wordsMap.put(word, count + 1);
+		    }
+		}
 	    }
-	}
 
-	return null;
+	    int i = 1;
+	    sortedWordsMap.putAll(wordsMap);
+	    for (String s : sortedWordsMap.keySet()) {
+		if (i == 35) {
+		    return s;
+		}
+		++i;
+	    }
+
+	    return null;
+	}
     }
 
     private static String countPostsWithFrodoWord() {
@@ -393,6 +425,23 @@ public class Main {
 	}
 
 	public abstract String testOperations();
+    }
+
+    private static class ValueComparator implements Comparator<String> {
+	private final Map<String, Integer> baseMap;
+
+	public ValueComparator(Map<String, Integer> baseMap) {
+	    this.baseMap = baseMap;
+	}
+
+	@Override
+	public int compare(String o1, String o2) {
+	    if (baseMap.get(o1) < baseMap.get(o2)) {
+		return 1;
+	    } else {
+		return -1;
+	    }
+	}
     }
 
 }
